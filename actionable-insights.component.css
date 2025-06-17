@@ -1,0 +1,287 @@
+
+
+
+.powerbi-container{
+    width: 100vw;
+    height: 100vh;
+    overflow-y: auto;
+    
+}
+
+
+.device-header{
+    width: 100%;
+    height: 100px;
+}
+
+#header {
+    position: fixed;
+    top: 0;
+    z-index: 1000;
+    width: 100%;
+  }
+  
+  .header-print{
+    top:0px;
+  }
+  
+  ::ng-deep #header .headerContainer {
+    display: flex; 
+    width: 100%; 
+    justify-content: space-between;
+    height:64px;
+  }
+  
+  ::ng-deep #header .headerContainer ul,
+  ::ng-deep #header .headerContainer ul li{
+    align-items: center; 
+    display: flex; 
+    justify-content: space-between;
+  }
+  
+  ::ng-deep #header .headerContainer ul li div {
+    word-wrap: break-word; 
+    margin:0px 16px -13px 6px; 
+    min-height: 48px; 
+    display: flex; 
+    align-items: center;
+  }
+  
+  ::ng-deep #header .headerContainer ul li div p {
+    display:inline
+  }
+  
+  .app-header-label{
+    visibility: none;
+    background-size: 332px 64px;
+    height: 64px;
+    width:332px;
+    display: block;
+    background-position: center;
+    background-repeat: no-repeat;
+    cursor: pointer;
+    margin-left:10px;
+    color: white;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 20px;
+  }
+  
+  /* Hoverable dropdown */
+  
+  ::ng-deep #header .headerContainer .logoutDropdown {
+    position: relative;
+    display: inline-block;
+    width: 250px;
+    outline: none;
+  }
+  
+  ::ng-deep #header .headerContainer .logoutDropdown .user {
+    background-color: var(--bax-blue);
+    padding: 0px;
+    color: white;
+    font-size: 16px;
+    border: none;
+    outline: none;
+    height:56px;
+    width: 100%;
+  }
+  ::ng-deep #header .headerContainer .logoutDropdown .user .dvuserprofile_logo{
+    padding-left: 0px;
+    padding-right: 0px;
+    z-index: 3000;
+  }
+  ::ng-deep #header .headerContainer .logoutDropdown .user #userprofile_logo {
+    padding-right: 10px; 
+    margin:-24px 0 0 0;
+  }
+  ::ng-deep #header .headerContainer .logoutDropdown .user .userprofile_name{
+    height:56px;
+    padding-left: 0px;
+    padding-right: 0px;
+    z-index: 3000;
+  }
+  ::ng-deep #header .headerContainer .logoutDropdown .user .userprofile_name:hover{
+    height:64px;
+    z-index:1;
+    background-color: var(--bax-smoky-blue);
+  }
+  
+  ::ng-deep #header .headerContainer .logoutDropdown .user .userName {
+    font-size: 16px; 
+    font-weight: 400; 
+    margin: 22px 0 0 0px; 
+    display: flex; 
+    justify-content: left; 
+    color: white;
+  }
+  
+  ::ng-deep #header .headerContainer .logoutDropdown .dropdown-content {
+    position: absolute;
+    background-color: var(--bax-blue);
+    min-width: 250px;
+    right: 0%;
+    height: 64px;
+    top: 0px;
+    text-align: center;
+    font-size: 16px;
+  }
+  
+  ::ng-deep #header .headerContainer .logoutDropdown .dropdown-content .logout{
+    background-color: var(--bax-blue); 
+    position: relative;
+    width: 250px;
+    font-size: 16px;
+    height:64px;
+    z-index: 1;
+  }
+  
+  ::ng-deep #header .headerContainer .logoutDropdown .dropdown-content .logout:hover{
+    background-color: var(--bax-smoky-blue);
+    height:64px;
+    font-size:14px;
+  
+  }
+  
+  ::ng-deep #header .headerContainer .logoutDropdown .dropdown-content a {
+    color: white;
+    padding: 22px 22px;
+    text-decoration: none;
+    display: block;
+    cursor: pointer;
+  }
+  
+  
+  /* Loading Section */
+  
+  .loadingContainer {
+    height: 8px; 
+    background-color: var(--bax-blue); 
+    position: fixed;
+    top: 56px;
+    width: 100%;
+  }
+  
+  ::ng-deep .loadingContainer #spinner {
+    display: block; 
+    height: 8px;
+  }
+  
+  .mat-progress-bar
+  {
+    height: 8px !important ;
+  }
+  ::ng-deep .mat-progress-bar-fill::after {
+    background-color: var(--bax-blue);
+  }
+  
+  ::ng-deep .mat-progress-bar-buffer {
+    background: var(--bax-bg-vivid-cerulean);
+  }
+  
+  /* Print layout css */
+  
+  @media print {
+    .header-print {
+      display: none;
+    }
+  }
+  
+  @media print {
+    a[href]:after {
+      content: none !important;
+    }
+  }
+  
+  @media print {
+    a {
+      color: #007899 !important ;
+    }
+  }
+  
+  .notifications {
+    padding: 0px 0px 0px 0px; 
+    height:40px;
+    
+  }
+  
+  .notify-container {
+    background-color: var(--bax-bg-cyan);
+      color: #444;
+      height: 48px;
+      font-size: 14px;
+      border-bottom-left-radius: 10px;
+      border-bottom-right-radius: 10px;
+      padding-left:12px;
+  }
+  .notify-container .content{
+    width:91%;
+  }
+  .notify-container .buttoncontent{
+    width:9%;
+  }
+  
+  .content {
+    font-size: 14px;   
+    height: 48px;
+    line-height: 48px;
+    padding-left: 0px;
+  }
+  
+  .errorImage {
+    background-image: var(--hr-img-banner-notification);
+    background-repeat: no-repeat;
+    background-size: 24px 28px;
+    height:28px;
+    width:24px;
+    margin: 13px -20px 6px 0px !important;
+    
+  }
+  .errorLabel{
+    padding-left:36px;
+  }
+  
+  .btn-more {
+    width: 151px;
+    height: 36px;
+    margin-top: 6px;
+    margin-bottom:6px;
+    float:right;
+  }
+  ::ng-deep .notification-dialog-container .mat-dialog-container{
+    border-radius: 15px!important;
+  }
+
+  .errorMessageContainer{
+    width: 100vw;
+    height: 100vh;
+    overflow-y: auto;
+    background-color:var(--bax-smoke-grey-blue);
+    z-index: 1000;
+  }
+
+  .errorMessage{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 30px;
+ margin-top: 20%;
+    /* margin:calc(50vh- 50px) auto 0 auto; */
+    text-align: center;
+    line-height: 100px;
+    font-family: 'Roboto-Medium', 'Roboto Medium', 'Roboto', sans-serif;
+    font-weight: 600;
+  }
+   
+  #errorSubText{
+    font-family: "Roboto", sans-serif;
+    color: #1e1e1e;
+    text-align: left;
+    font-size: 20px;
+    margin-top: -5%;
+    justify-content: center;
+    padding-top: 20px;
+    display: flex;
+    margin-left: -23%;
+    font-weight: 500;
+
+  }

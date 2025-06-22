@@ -1,6 +1,6 @@
 import { Router } from "@angular/router";
 import * as pbi from 'powerbi-client';
-import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from "@angular/core";
+import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, NgZone } from "@angular/core";
 import { FetchClient, UserService, IFetchOptions, InventoryService } from "@c8y/client";
 import { UserLogoutService } from "../../services/userLogout.service";
 import { Subscription } from "rxjs";
@@ -8,7 +8,9 @@ import { UserActivityService } from '../../services/userActivity.service';
 import { NotificationData } from "../../models/notification-data";
 import { MatDialog } from "@angular/material/dialog";
 import { UserInactivityService } from "../../services/userInactivity.service";
-
+import { marked } from 'marked';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { HttpClient, HttpHeaders } from "@angular/common/http";
 
 
 @Component({
@@ -44,8 +46,9 @@ export class ActionableInsightsComponent implements OnInit {
   managedObjects: any;
   isChatOpen = false;
   userMessage = '';
-  chatMessages: any[] = [];
-
+  chatMessages: { type: string; content: string; html?: SafeHtml }[] = [];
+  private apiUrl = ''; // Replace with your actual API endpoint
+  private bearerToken = ''
   // Predefined questions for the chat bot
   predefinedQuestions = [
     {
@@ -59,10 +62,18 @@ export class ActionableInsightsComponent implements OnInit {
       category: 'General',
       questions: [
         'How to clear error codes?',
-        'How many beds are there in the Facillity 001?',
-        'How many beds have due predictive maintenance?'
+        'How to replace a footboard on Centrella?',
+        'part number for centrella right siderail'
       ]
-    }
+    },
+    {
+      category: 'Actionable Insights',
+      questions: [
+        'How many beds are due for PM?',
+        'Provide error history for device - Y156PF4916',
+        'How many devices have utilization rate less than 20%?'
+      ]
+    },
   ];
 
   showPredefinedQuestions = true;
@@ -73,7 +84,12 @@ export class ActionableInsightsComponent implements OnInit {
 
   @ViewChild('chatMessagesContainer') chatMessagesContainer: ElementRef;
 
+  isListening = false;
+  recognition: any;
+  transcript: string = '';
+
   constructor(private router: Router,
+    private http: HttpClient,
     private fetchClient: FetchClient,
     private userService: UserService,
     private userLogoutService: UserLogoutService,
@@ -81,6 +97,8 @@ export class ActionableInsightsComponent implements OnInit {
     private eRef: ElementRef,
     public dialog: MatDialog,
     private userInactitvityService: UserInactivityService,
+    private sanitizer: DomSanitizer,
+    private ngZone: NgZone
   ) {
     //powerbi
 
@@ -94,10 +112,25 @@ export class ActionableInsightsComponent implements OnInit {
     this.userActivityService.setupTimers();
     this.getActionableInsightsReport();
 
+  }
+
+  async onUserInput(inputData: string) :Promise<string>{
+    const headers = new HttpHeaders({
+      'Authorization' : `Bearer ${this.bearerToken}`,
+      'Content-Type': 'application/json'
+    });
+    const body = {
+      'input_data': inputData
+    };
+    const response = await this.http.post(this.apiUrl, body, { headers }).toPromise();
+    return response['output'];
 
   }
 
-
+  async getChat(prompt: string): Promise<string> {
+    const output = await this.onUserInput(prompt);
+    return output;
+  }
 
   public embedPowerbiReport(data): void {
     const reportContainer = this.containerRef.nativeElement;
@@ -119,14 +152,12 @@ export class ActionableInsightsComponent implements OnInit {
       this.observeDomChanges();
       window.scrollTo(0, 0);
 
-
     });
 
     report.on('pageChanged', () => {
       this.applyMargin();
       this.observeDomChanges();
       window.scrollTo(0, 0);
-
 
     });
 
@@ -136,7 +167,6 @@ export class ActionableInsightsComponent implements OnInit {
       window.scrollTo(0, 0);
 
     });
-
 
 
 
@@ -159,7 +189,6 @@ export class ActionableInsightsComponent implements OnInit {
 
       let spinnerElement = document.getElementById("spinner") as HTMLElement;
       spinnerElement.style.display = "none";
-
 
       if (response.status === 200 || response.status === 201) {
         const reportresponse = await response.json();
@@ -219,7 +248,6 @@ export class ActionableInsightsComponent implements OnInit {
     this.getEmbedDetails(this.listFacilityIds, this.aiSupportedSepdeviceList);
   }
 
-
   async fetchCurrentUser() {
     if (window.sessionStorage.getItem("CURRENT_LOGGEDIN_USER_EMAIL") == null || window.sessionStorage.getItem("CURRENT_LOGGEDIN_USER_EMAIL") == undefined) {
       const { data, res } = await this.userService.current();
@@ -254,18 +282,15 @@ export class ActionableInsightsComponent implements OnInit {
   }
 
 
-
   activateError() {
     this.powerBIError = true;
   }
-
 
   applyMargin() {
     if (this.containerRef && this.containerRef.nativeElement) {
       this.containerRef.nativeElement.style.setProperty('margin-top', '45px', 'important');
     }
   }
-
 
 
 
@@ -280,13 +305,11 @@ export class ActionableInsightsComponent implements OnInit {
   }
 
 
-
   ngOnDestroy() {
     if (this.containerRef.nativeElement) {
       this.powerbiService.reset(this.containerRef.nativeElement)
     }
   }
-
 
 
 
@@ -312,14 +335,12 @@ export class ActionableInsightsComponent implements OnInit {
     this.userLogoutService.logoutFromApplication();
   }
 
-
   @HostListener('document:click', ['$event'])
   clickIfClickedOutside(event) {
 
     if (this.eRef.nativeElement.contains(event.target)) {
       if ((!event.target.id.startsWith("dvLogout")) &&
         (!event.target.id.startsWith("logout"))) {
-
 
       }
     } else {
@@ -330,7 +351,6 @@ export class ActionableInsightsComponent implements OnInit {
     }
 
   }
-
   toggleChat() {
     this.isChatOpen = !this.isChatOpen;
     if (this.isChatOpen && this.chatMessages.length === 0) {
@@ -341,26 +361,125 @@ export class ActionableInsightsComponent implements OnInit {
     }
   }
 
-  sendMessage() {
-    if (this.userMessage.trim()) {
-      // Hide predefined questions if user types their own question
-      this.showPredefinedQuestions = false;
-      // Add user message
-      this.chatMessages.push({
-        type: 'user',
-        content: this.userMessage
-      });
-      this.userMessage = '';
-      setTimeout(() => this.scrollToBottom(), 50);
-
-      setTimeout(() => {
-        this.chatMessages.push({
-          type: 'bot',
-          content: 'I received your message: ' + this.userMessage
-        });
-        setTimeout(() => this.scrollToBottom(), 50);
-      }, 1000);
+  toggleVoiceRecognition() {
+    if (this.isListening) {
+      this.stopListening();
+    } else {
+      this.startListening();
     }
+  }
+
+  startListening() {
+    // Use webkitSpeechRecognition for Chrome, SpeechRecognition for others
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Speech recognition is not supported in this browser. Please use Google Chrome or Microsoft Edge.');
+      return;
+    }
+    this.recognition = new SpeechRecognition();
+    this.recognition.lang = 'en-US';
+    this.recognition.interimResults = false;
+    this.recognition.maxAlternatives = 1;
+
+    this.recognition.onstart = () => {
+      this.ngZone.run(() => this.isListening = true);
+    };
+
+    this.recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      this.ngZone.run(() => {
+        this.transcript = transcript;
+        this.userMessage = transcript;
+        this.isListening = false;
+        this.sendMessage();
+      });
+    };
+
+    this.recognition.onerror = (event: any) => {
+      this.ngZone.run(() => {
+        this.isListening = false;
+        alert('Speech recognition error: ' + event.error);
+      });
+    };
+
+    this.recognition.onend = () => {
+      this.ngZone.run(() => this.isListening = false);
+    };
+
+    this.recognition.start();
+  }
+
+  stopListening() {
+    if (this.recognition) {
+      this.recognition.stop();
+    }
+    this.isListening = false;
+  }
+
+  async sendMessage() {
+    if (!this.userMessage.trim()) return;
+
+    // Add user message to chat
+    this.chatMessages.push({
+      type: 'user',
+      content: this.userMessage
+    });
+
+    // Show loading state
+    this.chatMessages.push({
+      type: 'bot',
+      content: 'Thinking...'
+    });
+
+    try {
+      // Call ML API
+      const response = await fetch(this.apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': '',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+
+          "dataframe_records": [
+            {
+                "input_string": this.userMessage
+            }
+        ]
+        })
+      });
+
+      const data = await response.json();
+      console.log(data.predictions)
+      // Remove loading message
+      this.chatMessages.pop();
+      
+      // Add bot response with markdown support
+      this.chatMessages.push({
+        type: 'bot',
+        content: data.predictions,
+        //html: this.convertMarkdownToHtml(data.predictions)
+      });
+    } catch (error) {
+      // Remove loading message
+      this.chatMessages.pop();
+      
+      // Add error message
+      this.chatMessages.push({
+        type: 'bot',
+        content: 'Sorry, I encountered an error. Please try again.'
+      });
+      console.error('Error calling ML API:', error);
+    }
+
+    this.userMessage = '';
+    this.showPredefinedQuestions = false;
+    setTimeout(() => this.scrollToBottom(), 100);
+  }
+
+  async sendPredefinedQuestion(q: string) {
+    this.userMessage = q;
+    await this.sendMessage();
   }
 
   scrollToBottom() {
@@ -369,12 +488,6 @@ export class ActionableInsightsComponent implements OnInit {
         this.chatMessagesContainer.nativeElement.scrollTop = this.chatMessagesContainer.nativeElement.scrollHeight;
       }
     } catch (err) {}
-  }
-
-  sendPredefinedQuestion(q: string) {
-    this.userMessage = q;
-    this.sendMessage();
-    this.showPredefinedQuestions = false;
   }
 
   goBackToPredefinedQuestions() {

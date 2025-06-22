@@ -55,7 +55,6 @@
       </div>      
 
 
-
    <div [hidden] ="powerBIError" class ="device-items" id = "device-items">
       <div [hidden]="powerBIError"class="powerbi-container" #powerbiContainer ></div>
   </div>
@@ -67,7 +66,7 @@
   </button>
   <div class="chat-card" *ngIf="isChatOpen">
     <div class="chat-card-header">
-      <span>RAM Bot</span>
+      <span>RAM Assistant</span>
       <button class="close-btn" (click)="toggleChat()">×</button>
     </div>
     <div class="predefined-questions" *ngIf="showPredefinedQuestions">
@@ -87,13 +86,17 @@
     </div>
     <div class="chat-card-messages" #chatMessagesContainer>
       <div *ngFor="let message of chatMessages" class="message" [ngClass]="message.type">
-        {{message.content}}
+        <div *ngIf="message.type === 'user'">{{message.content}}</div>
+        <div *ngIf="message.type === 'bot'" [innerHTML]="message.html || message.content"></div>
       </div>
     </div>
     <div class="chat-card-input">
       <input type="text" [(ngModel)]="userMessage" placeholder="Type your message..." (keyup.enter)="sendMessage()">
-      <button (click)="sendMessage()">
+      <button (click)="sendMessage()" title="Send">
         <i class="fas fa-paper-plane"></i>
+      </button>
+      <button class="mic-btn" [class.listening]="isListening" (click)="toggleVoiceRecognition()" title="Speak your message">
+        <i class="fas fa-microphone"></i>
       </button>
     </div>
   </div>
@@ -128,10 +131,11 @@
 
   .chat-card {
     position: absolute;
-    bottom: 80px;
+    bottom: 25px;
     right: 0;
-    width: 370px;
-    max-height: 500px;
+    height: 740px;
+    width: 800px;
+    
     background: #fff;
     border-radius: 18px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.18);
@@ -141,7 +145,8 @@
     animation: slideUp 0.3s cubic-bezier(.4,0,.2,1);
 
     .chat-card-header {
-      background: #2563eb;
+      height: 60px;
+      background: #090a66;
       color: #fff;
       padding: 18px 20px;
       display: flex;
@@ -164,23 +169,26 @@
       flex: 1;
       padding: 18px;
       overflow-y: auto;
-      background: #f6f8fa;
+      background: #ffffff;
       .message {
         margin-bottom: 12px;
         padding: 10px 16px;
         border-radius: 14px;
-        max-width: 80%;
-        font-size: 15px;
+        max-width: 95%;
+        font-size: 16px;
         &.bot {
-          background: #fff;
+          background: #c5c7c9;
           border: 1px solid #e5e7eb;
           color: #222;
           margin-right: auto;
+
+          
         }
         &.user {
-          background: #2563eb;
+          background: #4f77cd;
           color: #fff;
           margin-left: auto;
+          margin-right: auto;
         }
       }
     }
@@ -216,6 +224,33 @@
         transition: background 0.2s;
         &:hover { background: #1e40af; }
       }
+      .mic-btn {
+        margin-left: 8px;
+        background: #fff;
+        color: #2563eb;
+        border: 2px solid #2563eb;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        transition: box-shadow 0.2s, border-color 0.2s, color 0.2s;
+        position: relative;
+      }
+      .mic-btn.listening {
+        color: #fff;
+        background: #e11d48;
+        border-color: #e11d48;
+        box-shadow: 0 0 0 4px rgba(225,29,72,0.15), 0 0 12px 2px #e11d48;
+        animation: pulse-mic 1s infinite;
+      }
+      @keyframes pulse-mic {
+        0% { box-shadow: 0 0 0 4px rgba(225,29,72,0.15), 0 0 12px 2px #e11d48; }
+        50% { box-shadow: 0 0 0 10px rgba(225,29,72,0.10), 0 0 24px 4px #e11d48; }
+        100% { box-shadow: 0 0 0 4px rgba(225,29,72,0.15), 0 0 12px 2px #e11d48; }
+      }
     }
 
     .predefined-questions {
@@ -224,7 +259,7 @@
         font-weight: bold;
         margin-top: 10px;
         margin-bottom: 6px;
-        font-size: 16px;
+        font-size: 14px;
       }
       .question-list {
         display: flex;
@@ -234,7 +269,7 @@
         button {
           background: #e5e7eb;
           border: none;
-          border-radius: 18px;
+          border-radius: 16px;
           padding: 7px 16px;
           font-size: 14px;
           color: #222;
@@ -254,5 +289,3 @@
   to { opacity: 1; transform: translateY(0);}
 }
 </style>
-
-
